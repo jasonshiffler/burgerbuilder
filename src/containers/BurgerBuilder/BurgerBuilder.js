@@ -19,7 +19,20 @@ class BurgerBuilder extends Component {
       meat: 0,
     },
     totalPrice: 4,
+    purchaseable: false,
   };
+
+  /* Let's us know if the burger is purchaseable (must have one ingredient)
+   *  We don't want the ingrediants from the state since it may not be current.
+   */
+  updatePurchaseState(updatedIngredients) {
+    const ingredients = { ...updatedIngredients };
+    const numIngredients = Object.values(ingredients).reduce(
+      (total, currentValue) => total + currentValue,
+      0
+    );
+    this.setState({ purchaseable: numIngredients > 0 });
+  }
 
   addIngredientHandler = (type) => {
     const oldCount = this.state.ingredients[type];
@@ -31,6 +44,7 @@ class BurgerBuilder extends Component {
     const newPrice = oldPrice + priceAddition;
 
     this.setState({ ingredients: updatedIngredients, totalPrice: newPrice });
+    this.updatePurchaseState(updatedIngredients);
   };
 
   removeIngredientHandler = (type) => {
@@ -47,17 +61,29 @@ class BurgerBuilder extends Component {
     const newPrice = oldPrice - priceRemove;
 
     this.setState({ ingredients: updatedIngredients, totalPrice: newPrice });
+    this.updatePurchaseState();
   };
 
   render() {
+    const disabledInfo = {
+      ...this.state.ingredients,
+    };
+
+    for (let key in disabledInfo) {
+      disabledInfo[key] = disabledInfo[key] <= 0;
+    }
+
     return (
       <Aux>
         <div>
           <Burger ingredients={this.state.ingredients}></Burger>
         </div>
         <BuildControls
+          price={this.state.totalPrice}
+          disabled={disabledInfo}
           ingredientAdded={this.addIngredientHandler}
           ingredientRemoved={this.removeIngredientHandler}
+          purchaseable={this.state.purchaseable}
         ></BuildControls>
       </Aux>
     );
